@@ -11,7 +11,11 @@ extern uint8_t BigFont[];          // Declare which fonts we will be using for T
 extern uint8_t SmallFont[];        
 extern uint8_t SevenSegNumFont[];  
 Time t;
-int x, y, hour, minute, sec, alarm_hour, alarm_minute;
+int x, y, hour, minute, minuteBefore, sec, secBefore, alarm_hour, alarm_minute;
+int centerX = 120;		// center of round clock
+int centerY = 120;		// center of round clock
+int r = 100;			// radius of round clock
+float a;
 String message = "";
 
 // routines
@@ -33,7 +37,75 @@ int readSerial(String request) {
   return inputText.toInt();
 }
 
+void drawClockface(){
+	for(a = 0; a < 3.14*2; a += 3.1416/6){
+		x = cos(a)*r;
+		y = sin(a)*r;
+    myGLCD.setColor(125, 125, 125);
+		myGLCD.fillCircle(centerX + x, centerY + y, 5);
+	}
+}
+	
+
+void drawHands() {
+  int hourHandL = r*6/10;
+  int hourHandW = 3;
+  int minuteHandL = r*8/10;
+  int minuteHandW = 1;
+
+  myGLCD.setColor(0, 0, 0);
+  myGLCD.fillCircle(centerX, centerY, r*9/10);
+  
+  // hour hend
+  a = -(3.1416/6)*(hour + (minute*0.0167) - 3); //angle in radians
+  x = cos(a)*hourHandL;
+  y = sin(a)*hourHandL;
+  myGLCD.setColor(125, 255, 125);
+  for (int dx = -hourHandW; dx <= hourHandW; dx++) {
+    for (int dy = -hourHandW; dy <= hourHandW; dy++) {
+      myGLCD.drawLine(centerX+dx, centerY+dy, centerX+x+dx, centerY-y+dy);
+    }
+  }
+
+  // minute hend
+  a = -(3.1416/30)*(minute - 15); //angle in radians
+  x = cos(a)*minuteHandL;
+  y = sin(a)*minuteHandL;
+  myGLCD.setColor(125, 255, 125);
+  for (int dx = -minuteHandW; dx <= minuteHandW; dx++) {
+    for (int dy = -minuteHandW; dy <= minuteHandW; dy++) {
+      myGLCD.drawLine(centerX+dx, centerY+dy, centerX+x+dx, centerY-y+dy);
+    }
+  }
+  
+}
+
+void printTime() {
+  x = 240;
+  y = 20;
+  myGLCD.setFont(SmallFont);
+  myGLCD.setColor(125, 255, 125);
+  myGLCD.printNumI(hour, x, y, 2, '0');
+  myGLCD.print(":", x+8*2, y);
+  myGLCD.printNumI(minute, x+8*3, y, 2, '0');
+  myGLCD.print(":", x+8*5, y);
+  myGLCD.printNumI(sec, x+8*6, y, 2, '0');
+}
+
 // ------------------------------------
+/* int readSerial2(String request) {
+   Serial.println(request);
+   String inputText = "";
+   while (inputText == ""){
+    if (Serial.available()) {
+      inputText = Serial.readString();
+    }
+  }
+  inputText.trim();            
+  return inputText.toInt();
+} */
+
+//--------------------------------------------
 void setup() {
   rtc.begin();							// RTC clock initialisation
   
@@ -43,8 +115,6 @@ void setup() {
   myGLCD.InitLCD(LANDSCAPE);			// LCD initialisation
   myGLCD.clrScr();
   myGLCD.setBackColor(0, 0, 0);  
-  myGLCD.setColor(125, 255, 125);
-  myGLCD.setFont(BigFont);
   
   Serial.println("-- Time Initial Setup --");	// set parameters via serial interface
   hour = readSerial("Enter hours");				// if hours do not entered during 5 secund readSerial returns "-1",  skip time setup and use time saved in RTC
@@ -57,16 +127,10 @@ void setup() {
 	String message = "";
 	message = message + "-- setting time " + hour + ":" + minute + ":" + sec;
 	Serial.println(message);
-
-/*     Serial.print("-- setting time ");
-    Serial.print(hour);  
-    Serial.print(":");  
-    Serial.print(minute);  
-    Serial.print(":");  
-    Serial.println(sec); */
   
     rtc.setTime(hour, minute, sec);
   }
+  drawClockface();
   Serial.println("setup routine done");
 }
 // ---------------------------------------
@@ -75,20 +139,14 @@ void loop() {
   hour = t.hour;
   minute = t.min;
   sec = t.sec;
-  
-  Serial.print(hour);  
-  Serial.print(":");  
-  Serial.print(minute);  
-  Serial.print(":");  
-  Serial.println(sec);  
- 
-  //myGLCD.clrScr();
-  x = 100;
-  y = 100;
-  myGLCD.printNumI(hour, x, y, 2, '0');
-  myGLCD.print(":", x+16*2, y);
-  myGLCD.printNumI(minute, x+16*3, y, 2, '0');
-  myGLCD.print(":", x+16*5, y);
-  myGLCD.printNumI(sec, x+16*6, y, 2, '0');
-  delay(1000);
+
+  if (minute != minuteBefore) {
+	  drawHands();
+	  minuteBefore = minute;
+  }
+
+  if (sec != secBefore) {
+    printTime();
+    secBefore = sec;
+  }
 }
