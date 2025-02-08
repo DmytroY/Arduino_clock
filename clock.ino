@@ -15,7 +15,7 @@ int x, y, hour, minute, minuteBefore, sec, secBefore, alarm_hour, alarm_minute;
 int centerX = 120;		// center of round clock
 int centerY = 120;		// center of round clock
 int r = 100;			// radius of round clock
-float a;
+float a, tempr;
 String message = "";
 
 // routines
@@ -80,16 +80,28 @@ void drawHands() {
   
 }
 
-void printTime() {
-  x = 240;
-  y = 20;
-  myGLCD.setFont(SmallFont);
+void printInfo() {
+  // Print time
+  x = 190;
+  y = 5;
+  myGLCD.setFont(BigFont);
   myGLCD.setColor(125, 255, 125);
   myGLCD.printNumI(hour, x, y, 2, '0');
-  myGLCD.print(":", x+8*2, y);
-  myGLCD.printNumI(minute, x+8*3, y, 2, '0');
-  myGLCD.print(":", x+8*5, y);
-  myGLCD.printNumI(sec, x+8*6, y, 2, '0');
+  myGLCD.print(":", x+16*2, y);
+  myGLCD.printNumI(minute, x+16*3, y, 2, '0');
+  myGLCD.print(":", x+16*5, y);
+  myGLCD.printNumI(sec, x+16*6, y, 2, '0');
+
+  // Print temp
+  tempr = rtc.getTemp();
+  Serial.print("-- Temperature: ");
+  Serial.println(tempr);
+  x = 250;
+  y = 40;
+  myGLCD.printNumI(tempr, x, y, 2);
+  myGLCD.print("*C", x+16*2, y);
+  
+
 }
 
 // ------------------------------------
@@ -132,6 +144,7 @@ void setup() {
   }
   drawClockface();
   Serial.println("setup routine done");
+  //tone(A0, 440, 100);
 }
 // ---------------------------------------
 void loop() {
@@ -146,7 +159,7 @@ void loop() {
   }
 
   if (sec != secBefore) {
-    printTime();
+    printInfo();
     secBefore = sec;
   }
 }
