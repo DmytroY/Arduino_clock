@@ -12,7 +12,7 @@ extern uint8_t BigFont[];          // Declare which fonts we will be using for T
 extern uint8_t SmallFont[];        
 extern uint8_t SevenSegNumFont[];  
 Time t;
-int x, y, hour, minute, minuteBefore, sec, secBefore, date, month; 
+int x, y, hour, minute, minuteBefore, sec, secBefore, date, month, year; 
 int centerX = 120;		// center of round clock
 int centerY = 120;		// center of round clock
 int r = 100;			// radius of round clock
@@ -21,9 +21,10 @@ String message = "";
 String month_str = "";
 
 // routines
+//----------------------------------------------------------------------
 int readSerial(String request) {
 // the function for reading serial.
-// wiil be used for initial setup hours, minutes and secundes
+// wiil be used for initial setup time and date
 // In case of hours do not entered during 5 sec returns -1
   Serial.println(request);
   String inputText = "";
@@ -36,6 +37,7 @@ int readSerial(String request) {
     if ((request == "Enter hours") && (millis() - startTime > 5000)) return -1;
   }
   inputText.trim();                        // remove any \r \n whitespace at the end of the String
+  Serial.println(inputText);
   return inputText.toInt();
 }
 
@@ -48,7 +50,7 @@ void drawClockface(){
 	}
 }
 	
-
+//--------------------------------------------------------------------
 void drawHands() {
   int hourHandL = r*6/10;
   int hourHandW = 3;
@@ -81,7 +83,7 @@ void drawHands() {
   }
   
 }
-
+//------------------------------------------------------------------
 void printInfo() {
   // Print time
   x = 190;
@@ -104,10 +106,11 @@ void printInfo() {
   myGLCD.print("*C", x+16*2, y);
   
   // Print date
-  y = 192;
+  y = 168;
   
   myGLCD.printNumI(date, x + 16*2 , y);
   myGLCD.print(month_str, x + 16*4 - 16 * month_str.length(), y + 8*3);
+  myGLCD.printNumI(year, x , y + 8*6);
 }
 
 //--------------------------------------------
@@ -128,6 +131,7 @@ void setup() {
 		sec = readSerial("Enter secundes");
 		date = readSerial("Enter day of month");
 		month = readSerial("Enter month");
+    year = readSerial("Enter year");
 
     message = "";
 		message = message + "-- setting time " + hour + ":" + minute + ":" + sec;
@@ -135,14 +139,15 @@ void setup() {
 		rtc.setTime(hour, minute, sec);
 
     message = "";
-		message = message + "-- setting date " + date + " " + month + " " + "2025";
+		message = message + "-- setting date " + date + " " + month + " " + year;
 		Serial.println(message);
 		
-		rtc.setDate(date, month, 2025);
+		rtc.setDate(date, month, year);
 	}
 	
 	drawClockface();
 	Serial.println("setup routine done");
+	//tone(A0, 440, 100);
 }
 // ---------------------------------------
 void loop() {
@@ -151,6 +156,7 @@ void loop() {
   minute = t.min;
   sec = t.sec;
   date = t.date;
+  year = t.year;
   
   month_str = rtc.getMonthStr();
 
