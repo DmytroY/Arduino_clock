@@ -19,6 +19,7 @@ int r = 100;			// radius of round clock
 float a, tempr;
 String message = "";
 String month_str = "";
+String month_last = "";
 
 // routines
 //----------------------------------------------------------------------
@@ -108,7 +109,11 @@ void printInfo() {
   // Print date
   y = 168;
   
-  myGLCD.printNumI(date, x + 16*2 , y);
+  myGLCD.printNumI(date, x + 16*2 , y, 2);
+  if(month_str != month_last) {
+	  myGLCD.print("         ", x + 16*4 - 16 * 9, y + 8*3);
+	  month_last = month_str;
+  } 
   myGLCD.print(month_str, x + 16*4 - 16 * month_str.length(), y + 8*3);
   myGLCD.printNumI(year, x , y + 8*6);
 }
