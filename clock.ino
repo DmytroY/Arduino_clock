@@ -13,7 +13,7 @@ extern uint8_t SmallFont[];
 extern uint8_t SevenSegNumFont[];  
 Time t;
 int x, y, hour, minute, minuteBefore, sec, secBefore, date, month, year; 
-int centerX = 120;		// center of round clock
+int centerX = 110;		// center of round clock
 int centerY = 120;		// center of round clock
 int r = 100;			// radius of round clock
 float a, tempr;
