@@ -16,8 +16,8 @@ int x, y, hour, minute, minuteBefore, sec, secBefore, date, month, year;
 int centerX = 110;		// center of round clock
 int centerY = 120;		// center of round clock
 int r = 100;			// radius of round clock
+char serial_buf[30]; // buffer for messsages to serial interface
 float a, tempr;
-String message = "";
 String month_str = "";
 String month_last = "";
 
@@ -148,14 +148,12 @@ void setup() {
 		minute = readSerial("Enter minutes");
 		sec = readSerial("Enter secundes");
 		
-		message = "";
-		message = message + "-- setting date " + date + " " + month + " " + year;
-		Serial.println(message);
-		rtc.setDate(date, month, year);	
+    sprintf(serial_buf, "-- setting date: %02d-%02d-%d", date, month, year);
+    Serial.println(serial_buf);
+    rtc.setDate(date, month, year);	
 		
-		message = "";
-		message = message + "-- setting time " + hour + ":" + minute + ":" + sec;
-		Serial.println(message);
+    sprintf(serial_buf, "-- setting time: %02d-%02d-%02d", hour, minute, sec);
+    Serial.println(serial_buf);
 		rtc.setTime(hour, minute, sec);
 	}
 	
