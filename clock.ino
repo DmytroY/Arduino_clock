@@ -12,14 +12,28 @@ extern uint8_t BigFont[];          // Declare which fonts we will be using for T
 extern uint8_t SmallFont[];        
 extern uint8_t SevenSegNumFont[];  
 Time t;
-int x, y, hour, minute, minuteBefore, sec, secBefore, date, month, year; 
+int x, y, hour, minute, minuteBefore, sec, secBefore, date, month, year, month_last = -1; 
 int centerX = 110;		// center of round clock
 int centerY = 120;		// center of round clock
 int r = 100;			// radius of round clock
 char serial_buf[30]; // buffer for messsages to serial interface
 float a, tempr;
-String month_str = "";
-String month_last = "";
+const char* months[] = {
+  "",
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December"
+};
+char month_cstr[12]; // c-style string for name of month
 
 // routines
 //----------------------------------------------------------------------
@@ -120,11 +134,12 @@ void printInfo() {
   y = 168;
   
   myGLCD.printNumI(date, x + 16*2 , y, 2);
-  if(month_str != month_last) {
-	  myGLCD.print("         ", x + 16*4 - 16 * 9, y + 8*3);
-	  month_last = month_str;
-  } 
-  myGLCD.print(month_str, x + 16*4 - 16 * month_str.length(), y + 8*3);
+  
+  if(month != month_last) {
+	myGLCD.print("         ", x + 16*4 - 16 * 9, y + 8*3);
+	month_last = month;
+  }
+  myGLCD.print(month_cstr, x + 16*4 - 16 * strlen(month_cstr), y + 8*3);
   myGLCD.printNumI(year, x , y + 8*6);
 }
 
@@ -164,22 +179,27 @@ void setup() {
 // ---------------------------------------
 void loop() {
   t = rtc.getTime();
-  hour = t.hour;
-  minute = t.min;
   sec = t.sec;
-  date = t.date;
-  year = t.year;
+  minute = t.min;
   
-  month_str = rtc.getMonthStr();
+  strncpy(month_cstr, months[month], sizeof(month_cstr)); // get month name based on month number
+  month_cstr[sizeof(month_cstr)-1] = '\0'; // ensure null-termination
 
   if (minute != minuteBefore) {
+    hour = t.hour;
+    date = t.date;
+    month = t.mon;
+    year = t.year;
+  
+    strncpy(month_cstr, months[month], sizeof(month_cstr)); // get month name based on month number
+    month_cstr[sizeof(month_cstr)-1] = '\0'; // ensure null-termination
+    
 	  drawHands();
 	  minuteBefore = minute;
   }
 
-  if (sec != secBefore) {
+  if (sec != secBefore) {  
     printInfo();
     secBefore = sec;
   }
-  
 }
