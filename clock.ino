@@ -16,7 +16,7 @@ int x, y, hour, minute, minuteBefore, sec, secBefore, date, month, year, month_l
 int centerX = 110;		// center of round clock
 int centerY = 120;		// center of round clock
 int r = 100;			// radius of round clock
-char serial_buf[30]; // buffer for messsages to serial interface
+char serial_buf[50]; // buffer for messsages to serial interface
 float a, tempr;
 const char* months[] = {
   "",
@@ -112,16 +112,21 @@ void printInfo() {
   myGLCD.printNumI(sec, x+16*6, y, 2, '0');
 
   // Print data to serial
-  Serial.print(hour);
-  Serial.print(":");
-  Serial.print(minute);
-  Serial.print(":");
-  Serial.print(sec);
-  
+
   tempr = rtc.getTemp();
-  Serial.print("   ");
-  Serial.print(tempr);
-  Serial.println("°C");
+  sprintf(serial_buf, "%02d:%02d:%02d   %d°C", hour, minute, sec, tempr);
+  Serial.println(serial_buf);
+  
+//  Serial.print(hour);
+//  Serial.print(":");
+//  Serial.print(minute);
+//  Serial.print(":");
+//  Serial.print(sec);
+//  
+//  tempr = rtc.getTemp();
+//  Serial.print("   ");
+//  Serial.print(tempr);
+//  Serial.println("°C");
   
   x = 250;
   y = 40;
@@ -163,11 +168,11 @@ void setup() {
 		minute = readSerial("Enter minutes");
 		sec = readSerial("Enter secundes");
 		
-    sprintf(serial_buf, "-- setting date: %02d-%02d-%d", date, month, year);
+    sprintf(serial_buf, "! date set to: %02d-%02d-%d", date, month, year);
     Serial.println(serial_buf);
     rtc.setDate(date, month, year);	
 		
-    sprintf(serial_buf, "-- setting time: %02d-%02d-%02d", hour, minute, sec);
+    sprintf(serial_buf, "! time set to: %02d:%02d:%02d", hour, minute, sec);
     Serial.println(serial_buf);
 		rtc.setTime(hour, minute, sec);
 	}
