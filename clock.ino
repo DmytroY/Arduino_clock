@@ -101,6 +101,7 @@ void drawHands() {
 //------------------------------------------------------------------
 void printInfo() {
   // Print time
+  tempr = rtc.getTemp();
   x = 190;
   y = 5;
   myGLCD.setFont(BigFont);
@@ -110,23 +111,6 @@ void printInfo() {
   myGLCD.printNumI(minute, x+16*3, y, 2, '0');
   myGLCD.print(":", x+16*5, y);
   myGLCD.printNumI(sec, x+16*6, y, 2, '0');
-
-  // Print data to serial
-
-  tempr = rtc.getTemp();
-  sprintf(serial_buf, "%02d:%02d:%02d   %d°C", hour, minute, sec, tempr);
-  Serial.println(serial_buf);
-  
-//  Serial.print(hour);
-//  Serial.print(":");
-//  Serial.print(minute);
-//  Serial.print(":");
-//  Serial.print(sec);
-//  
-//  tempr = rtc.getTemp();
-//  Serial.print("   ");
-//  Serial.print(tempr);
-//  Serial.println("°C");
   
   x = 250;
   y = 40;
@@ -135,17 +119,22 @@ void printInfo() {
   myGLCD.drawCircle(x+16*2+8, y+4, 3);
   myGLCD.drawCircle(x+16*2+8, y+4, 2);
   
-  // Print date
   y = 168;
-  
   myGLCD.printNumI(date, x + 16*2 , y, 2);
   
   if(month != month_last) {
-	myGLCD.print("         ", x + 16*4 - 16 * 9, y + 8*3);
-	month_last = month;
+	  myGLCD.print("         ", x + 16*4 - 16 * 9, y + 8*3);
+	  month_last = month;
   }
   myGLCD.print(month_cstr, x + 16*4 - 16 * strlen(month_cstr), y + 8*3);
   myGLCD.printNumI(year, x , y + 8*6);
+
+  // Print data to serial.
+  // Because float in printf is disabled in Arduino AVR libc I print it separately
+  sprintf(serial_buf, "%02d:%02d:%02d   ", hour, minute, sec);
+  Serial.print(serial_buf);
+  Serial.print(tempr, 2);
+  Serial.println("°C");
 }
 
 //--------------------------------------------
