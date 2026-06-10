@@ -1,11 +1,12 @@
 #include <Arduino.h>
-#include <UTFT.h>                         	//Libriary for TFT
-#include <DS3231.h>                       	//Libriary for Real Time Clock
+#include <UTFT.h>         // TFT
+#include <DS3231.h>       // RTC
 #include <EEPROM.h>
+#include <avr/wdt.h>      // Watchdog
 
 //----------- instances-----------------
-UTFT    myGLCD(CTE32_R2, 38, 39, 40, 41);	// myGLCD object of class UTFT with paramenter for specific TFT screed model
-DS3231  rtc(SDA, SCL);                  	// rtc object of class DS3231 - Real-time-clock HW modul connected to pins SDA and SCL
+UTFT    myGLCD(CTE32_R2, 38, 39, 40, 41); // myGLCD object of class UTFT with paramenter for specific TFT screed model
+DS3231  rtc(SDA, SCL);                    // rtc object of class DS3231 - Real-time-clock HW modul connected to pins SDA and SCL
 
 //------------ variables ----------------
 extern uint8_t BigFont[];          // Declare which fonts we will be using for TFT
@@ -13,9 +14,9 @@ extern uint8_t SmallFont[];
 extern uint8_t SevenSegNumFont[];  
 Time t;
 int x, y, hour, minute, minuteBefore, sec, secBefore, date, month, year, month_last = -1; 
-int centerX = 110;		// center of round clock
-int centerY = 120;		// center of round clock
-int r = 100;			// radius of round clock
+int centerX = 110;    // center of round clock
+int centerY = 120;    // center of round clock
+int r = 100;      // radius of round clock
 char serial_buf[50]; // buffer for messsages to serial interface
 float a, tempr;
 const char* months[] = {
@@ -57,14 +58,14 @@ int readSerial(String request) {
 }
 
 void drawClockface(){
-	for(a = 0; a < 3.14*2; a += 3.1416/6){
-		x = cos(a)*r;
-		y = sin(a)*r;
+  for(a = 0; a < 3.14*2; a += 3.1416/6){
+    x = cos(a)*r;
+    y = sin(a)*r;
     myGLCD.setColor(125, 125, 125);
-		myGLCD.fillCircle(centerX + x, centerY + y, 5);
-	}
+    myGLCD.fillCircle(centerX + x, centerY + y, 5);
+  }
 }
-	
+  
 //--------------------------------------------------------------------
 void drawHands() {
   int hourHandL = r*6/10;
@@ -123,8 +124,8 @@ void printInfo() {
   myGLCD.printNumI(date, x + 16*2 , y, 2);
   
   if(month != month_last) {
-	  myGLCD.print("         ", x + 16*4 - 16 * 9, y + 8*3);
-	  month_last = month;
+    myGLCD.print("         ", x + 16*4 - 16 * 9, y + 8*3);
+    month_last = month;
   }
   myGLCD.print(month_cstr, x + 16*4 - 16 * strlen(month_cstr), y + 8*3);
   myGLCD.printNumI(year, x , y + 8*6);
@@ -139,39 +140,41 @@ void printInfo() {
 
 //--------------------------------------------
 void setup() {
-	rtc.begin();							// RTC clock initialisation
+  rtc.begin();              // RTC clock initialisation
 
-	Serial.begin(9600);					// serial interface initialisation
-	Serial.println("Serial.begin(9600)");
+  Serial.begin(9600);         // serial interface initialisation
+  Serial.println("Serial.begin(9600)");
 
-	myGLCD.InitLCD(LANDSCAPE);			// LCD initialisation
-	myGLCD.clrScr();
-	myGLCD.setBackColor(0, 0, 0);  
+  myGLCD.InitLCD(LANDSCAPE);      // LCD initialisation
+  myGLCD.clrScr();
+  myGLCD.setBackColor(0, 0, 0);  
 
-	Serial.println("-- Date and Time Initial Setup --");	// set parameters via serial interface
-	year =readSerial("Enter year"); 	// if year did not entered during 5 secund readSerial returns "-1",  skip time setup and use time saved in RTC
+  Serial.println("-- Date and Time Initial Setup --");  // set parameters via serial interface
+  year =readSerial("Enter year");   // if year did not entered during 5 secund readSerial returns "-1",  skip time setup and use time saved in RTC
     if (year >= 0) {
-		month = readSerial("Enter month");
-		date = readSerial("Enter day of month");
-		hour = readSerial("Enter hour");
-		minute = readSerial("Enter minutes");
-		sec = readSerial("Enter secundes");
-		
+    month = readSerial("Enter month");
+    date = readSerial("Enter day of month");
+    hour = readSerial("Enter hour");
+    minute = readSerial("Enter minutes");
+    sec = readSerial("Enter secundes");
+    
     sprintf(serial_buf, "! date set to: %02d-%02d-%d", date, month, year);
     Serial.println(serial_buf);
-    rtc.setDate(date, month, year);	
-		
+    rtc.setDate(date, month, year); 
+    
     sprintf(serial_buf, "! time set to: %02d:%02d:%02d", hour, minute, sec);
     Serial.println(serial_buf);
-		rtc.setTime(hour, minute, sec);
-	}
-	
-	drawClockface();
-	Serial.println("setup routine done");
-	//tone(A0, 440, 100);
+    rtc.setTime(hour, minute, sec);
+  }
+  
+  drawClockface();
+  wdt_enable(WDTO_8S);
+  Serial.println("Watchdog timer enabled");
+  Serial.println("setup routine done");
 }
 // ---------------------------------------
 void loop() {
+  wdt_reset();
   t = rtc.getTime();
   sec = t.sec;
   minute = t.min;
@@ -184,12 +187,9 @@ void loop() {
     date = t.date;
     month = t.mon;
     year = t.year;
-  
-    strncpy(month_cstr, months[month], sizeof(month_cstr)); // get month name based on month number
-    month_cstr[sizeof(month_cstr)-1] = '\0'; // ensure null-termination
     
-	  drawHands();
-	  minuteBefore = minute;
+    drawHands();
+    minuteBefore = minute;
   }
 
   if (sec != secBefore) {  
