@@ -140,6 +140,11 @@ void printInfo() {
 
 //--------------------------------------------
 void setup() {
+  MCUSR = 0;
+  wdt_disable();
+  wdt_enable(WDTO_8S);
+  wdt_reset();
+  
   rtc.begin();              // RTC clock initialisation
 
   Serial.begin(9600);         // serial interface initialisation
@@ -168,8 +173,6 @@ void setup() {
   }
   
   drawClockface();
-  wdt_enable(WDTO_8S);
-  Serial.println("Watchdog timer enabled");
   Serial.println("setup routine done");
 }
 // ---------------------------------------
