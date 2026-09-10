@@ -7,3 +7,16 @@
 * DS3231 Realtime clock module.
 
 Remark - I used a defective LCD with a non-functional touchscreen, so I choose serial communication via UART for setting the date and time. On every startup, the clock requests the user to enter data via the serial monitor. If the user doesn't start entering data during 5 seconds, the clock finishes the booting sequence and uses the data and time currently stored in the Real-Time Clock (RTC) module.
+
+Remark.
+I notised that raising environment temperature causing display hangup.
+To fix find go to library file libraries\UTFT\hardware\avr\HW_AVR_defines.h
+and change this 
+```
+#define pulse_low(reg, bitmask) cbi(reg, bitmask); sbi(reg, bitmask);
+```
+to this
+```
+#define pulse_high(reg, bitmask) sbi(reg, bitmask); __asm__("nop\n\t"); cbi(reg, bitmask);
+```
+it will add small delay to driver's impulses and prevent display to hung becaue frequency too high.
