@@ -17,6 +17,6 @@ and change this
 ```
 to this
 ```
-#define pulse_high(reg, bitmask) sbi(reg, bitmask); __asm__("nop\n\t"); cbi(reg, bitmask);
+#define pulse_low(reg, bitmask) cbi(reg, bitmask); __asm__("nop\n\t"); __asm__("nop\n\t"); sbi(reg, bitmask);
 ```
 it will add small delay to driver's impulses and prevent display to hung becaue frequency too high.
